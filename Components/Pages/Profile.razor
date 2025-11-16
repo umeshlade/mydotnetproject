@@ -1,0 +1,22 @@
+﻿@page "/Profile"
+@inject IHttpContextAccessor HttpContextAccessor
+
+<h1>Profile</h1>
+<p>Username: @clientPrincipalName</p>
+<p>Unique ID: @uniqueId</p>
+<p>Identity Provider: @identityProvider</p>
+
+@code {
+    private string? clientPrincipalName { get; set; }
+    private string? uniqueId { get; set; }
+
+    private string? identityProvider { get; set; }
+
+    protected override void OnInitialized()
+    {
+        // Read the X-MS-CLIENT-PRINCIPAL-NAME header
+        clientPrincipalName = HttpContextAccessor.HttpContext?.Request.Headers["X-MS-CLIENT-PRINCIPAL-NAME"];
+        uniqueId = HttpContextAccessor.HttpContext?.Request.Headers["X-MS-CLIENT-PRINCIPAL-ID"];
+        identityProvider = HttpContextAccessor.HttpContext?.Request.Headers["X-MS-CLIENT-PRINCIPAL-IDP"];
+    }
+}

@@ -1,0 +1,74 @@
+@page "/cart"
+@rendermode InteractiveServer
+@inject ShoppingCartService CartService
+@inject NavigationManager Navigation
+@inject ILogger<Cart> Logger
+
+<div class="container" style="margin-top: 10px; margin-bottom: 10px;">
+<h3>Shopping Cart</h3>
+
+@if (cartItems == null)
+{
+    <p>Loading...</p>
+}
+else if (!cartItems.Any())
+{
+    <p>Your cart is empty.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Total</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in cartItems)
+            {
+                <tr>
+                    <td>@item.ProductName</td>
+                    <td>$ @item.Price</td>
+                    <td>@item.Quantity</td>
+                    <td>$ @(item.Price * item.Quantity)</td>
+                    <td>
+                        <button class="btn btn-danger" @onclick="() => RemoveItem(item.ProductId)">Remove</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <p>Total: $ @cartItems.Sum(x => x.Price * x.Quantity)</p>
+    <button class="btn btn-primary" @onclick="ClearCart">Clear Cart</button>
+}
+</div>
+
+@code {
+    private List<CartItem>? cartItems;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        cartItems = await CartService.GetCartAsync();
+    }
+
+    private async Task RemoveItem(int productId)
+    {
+        await CartService.RemoveFromCartAsync(productId);
+        Logger.LogInformation("Removed item with ProductId: {ProductId} from cart.", productId);
+        cartItems = await CartService.GetCartAsync();
+        StateHasChanged();
+    }
+
+    private async Task ClearCart()
+    {
+        await CartService.ClearCartAsync();
+        Logger.LogInformation("Cleared the shopping cart.");
+        cartItems = await CartService.GetCartAsync();
+        StateHasChanged();
+    }
+}

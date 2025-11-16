@@ -1,0 +1,37 @@
+@inject IHttpContextAccessor HttpContextAccessor
+@inject IConfiguration Configuration
+
+<div class="header-nav--utilities d-flex align-items-center justify-content-end flex-row-reverse flex-row flex-md-row">
+    <div class="account d-flex flex-column">
+        @if (authenticationEnabled == true)
+        {
+            @if (clientPrincipalName != null)
+            {
+                <p>
+                    <NavLink class="nav-link" href="profile">@clientPrincipalName</NavLink>
+                </p>
+                <a href="/.auth/logout?post_logout_redirect_uri=/">Sign out</a>
+            }
+            else
+            {
+                <a href="/.auth/login/aad?post_login_redirect_uri=/profile">Log in</a>
+            }
+        }
+    </div>
+</div>
+
+@code {
+
+    private string? clientPrincipalName { get; set; }
+
+    private bool? authenticationEnabled { get; set; } = false;
+
+    protected override void OnInitialized()
+    {
+        // Read the X-MS-CLIENT-PRINCIPAL-NAME header as a nullable string
+        clientPrincipalName = HttpContextAccessor.HttpContext?.Request.Headers["X-MS-CLIENT-PRINCIPAL-NAME"];
+        // Check if authentication is enabled by reading the WEBSITE_AUTH_ENABLED configuration value
+        authenticationEnabled = Configuration.GetValue<string>("WEBSITE_AUTH_ENABLED")?.Equals("True",
+        StringComparison.OrdinalIgnoreCase) ?? false;
+    }
+}

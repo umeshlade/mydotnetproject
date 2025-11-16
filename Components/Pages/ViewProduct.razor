@@ -1,0 +1,60 @@
+@page "/viewproduct/{Id:int}"
+@rendermode InteractiveServer
+@using CarvedRockFitness.Repositories
+@using CarvedRockFitness.Models
+@using CarvedRockFitness.Services
+@inject IProductRepository ProductRepository
+@attribute [StreamRendering(true)]
+@inject ShoppingCartService CartService
+@inject CartEventService CartEventService
+@inject ILogger<ViewProduct> Logger
+
+@if (product == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="container panel panel-default" style="margin-top: 10px; margin-bottom: 10px;">
+        <div class="row">
+            <div class="col-sm-12 col-md-6 col-lg-6">
+                <div class="caption">
+                    <h3>@product.Name</h3>
+                    <p>@product.Description</p>
+                    <p>$@product.Price</p>
+                    <p><button class="btn btn-default" role="button" @onclick="() => AddToCart(product)">Add to
+                            Cart</button></p>
+                </div>
+            </div>
+            <div class="col-sm-12 col-md-6 col-lg-6">
+                <div class="media-object" style="margin-top: 10px; margin-bottom: 10px;">
+                    <img src="@product.ImageUrl" class="" alt="@product.Name"
+                        style="height: 200px; object-fit: cover;" />
+            </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int? Id { get; set; }
+
+    private Product? product;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id.HasValue)
+        {
+            Logger.LogInformation("Loading product with ID: {Id}", Id.Value);
+            product = await ProductRepository.GetByIdAsync(Id.Value);
+        }
+    }
+
+    private async Task AddToCart(Product product)
+    {
+        Logger.LogInformation("Adding to Cart " + product.Name);
+        await CartService.AddToCartAsync(product, 1);
+        await CartEventService.NotifyCartUpdatedAsync();
+    }
+}

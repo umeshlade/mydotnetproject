@@ -1,0 +1,5 @@
+@if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("PROMOTION"))) {
+    <div class="alert alert-warning text-center" role="alert">
+        @Environment.GetEnvironmentVariable("PROMOTION")
+    </div>
+}

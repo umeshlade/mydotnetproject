@@ -1,0 +1,97 @@
+@rendermode InteractiveServer
+@using CarvedRockFitness.Services
+@inject ShoppingCartService CartService
+@inject CartEventService CartEventService
+
+<nav class="navbar navbar-expand flex-column flex-md-row header-nav--nav">
+    <div class="container">
+        <div class="d-md-flex justify-content-between">
+            <div class="navbar-brand d-flex justify-content-between align-items-center">
+                <a href="/"><img alt="Carved Rock Fitness"
+                        src="https://www.pluralsight.com/content/dam/pluralsight2/teach/author-tools/carved-rock-fitness/logos/carved-rock-logo.png"></a>
+                <button aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"
+                    class="navbar-toggle" data-target="#navbarNav" data-toggle="collapse" type="button"><span
+                        class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></button>
+            </div>
+            <div class="collapse navbar-collapse justify-content-center align-items-center" id="navbarNav">
+                <div class="header-nav--main">
+                    <form class="form-inline form-inline d-none d-sm-none d-md-block">
+                        <input aria-label="Search" class="form-control" placeholder="What can we help you find?"
+                            type="search"> <button class="btn btn-default" type="submit">SEARCH</button>
+                    </form>
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <NavLink class="nav-link" href="products/clothing" Match="NavLinkMatch.All">Clothing
+                            </NavLink>
+                        </li>
+                        <li class="nav-item">
+                            <NavLink class="nav-link" href="products/footwear" Match="NavLinkMatch.All">Footwear
+                            </NavLink>
+                        </li>
+                        <li class="nav-item">
+                            <NavLink class="nav-link" href="products/equipment" Match="NavLinkMatch.All">Equipment
+                            </NavLink>
+                        </li>
+                        <li class="nav-item">
+                            <NavLink class="nav-link" href="products/bags" Match="NavLinkMatch.All">Bags &amp;
+                                Travel
+                            </NavLink>
+                        </li>
+                        <li class="nav-item">
+                            <NavLink class="nav-link" href="trails" Match="NavLinkMatch.All">Trail Reviews</NavLink>
+                        </li>
+                        <li class="nav-item">
+                            <NavLink class="nav-link" href="cart" Match="NavLinkMatch.All">
+                                Cart
+                                @if (cartCount > 0)
+                                {
+                                    <span class="badge" style="background-color: #d9534f; color: white;">@cartCount</span>
+                                }
+                            </NavLink>
+                        </li>
+                    </ul>
+                </div>
+                <div
+                    class="header-nav--utilities d-flex align-items-center justify-content-end flex-row-reverse flex-row flex-md-row">
+                    @* <div class="account d-flex flex-column">
+                        John Doe <a href="#">Log Out</a>
+                    </div>
+                    <div class="image"><img alt="John Doe"
+                            src="https://www.pluralsight.com/content/dam/pluralsight2/teach/author-tools/carved-rock-fitness/profile-pic.jpg">
+                    </div> *@
+                    <Profile />
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+@code {
+    private int cartCount;
+
+    protected override async Task OnInitializedAsync()
+    {
+        CartEventService.CartUpdated += UpdateCartCount;
+        await UpdateCartCount();
+    }
+
+    private async Task UpdateCartCount()
+    {
+        try
+        {
+            Console.WriteLine("Navigation.razor: Updating cart count");
+            var cart = await CartService.GetCartAsync();
+            cartCount = cart.Sum(item => item.Quantity);
+            Console.WriteLine($"Navigation.razor: Cart count updated to {cartCount}");
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Navigation.razor: Error updating cart count - {ex.Message}");
+        }
+    }
+    public void Dispose()
+    {
+        CartEventService.CartUpdated -= UpdateCartCount;
+    }
+}

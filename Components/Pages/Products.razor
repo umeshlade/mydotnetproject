@@ -1,0 +1,88 @@
+﻿@page "/products/{Category?}"
+@rendermode InteractiveServer
+@using CarvedRockFitness.Repositories
+@using CarvedRockFitness.Models
+@using CarvedRockFitness.Services
+@inject IProductRepository ProductRepository
+@attribute [StreamRendering(true)]
+@inject ShoppingCartService CartService
+@inject CartEventService CartEventService
+@inject ILogger<Products> Logger
+
+<h2 class="text-primary">@(string.IsNullOrEmpty(Category) ? " All Products" : $" {Category.ToUpperInvariant()}")</h2>
+@if (products == null)
+{
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        @for (int i = 0; i < 3; i++)
+        {
+            <div class="col">
+                <div class="card h-100">
+                    <div class="placeholder-glow">
+                        <div class="card-img-top placeholder" style="height: 200px;"></div>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title placeholder-glow">
+                            <span class="placeholder col-6"></span>
+                        </h5>
+                        <p class="card-text placeholder-glow">
+                            <span class="placeholder col-12"></span>
+                            <span class="placeholder col-8"></span>
+                        </p>
+                        <p class="card-text placeholder-glow">
+                            <span class="placeholder col-4"></span>
+                        </p>
+                        <p class="card-text placeholder-glow">
+                            <span class="placeholder col-5"></span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else if (!products.Any())
+{
+    <p>No products found for @(string.IsNullOrEmpty(Category) ? "any category" : Category).</p>
+}
+else
+{
+    <div class="row">
+        @foreach (var product in products)
+        {
+            <div class="col-sm-6 col-md-4">
+                <div class="thumbnail">
+                    <img src="@product.ImageUrl" class="card-img-top" alt="@product.Name"
+                        style="height: 200px; object-fit: cover;" />
+                    <div class="caption">
+                        <h3>@product.Name</h3>
+                        <p>@product.Description</p>
+                        <p>$@product.Price</p>
+                        <p>
+                            <NavLink class="btn btn-primary" role="button" href="@($"/viewproduct/{product.Id}")">View</NavLink>
+                            <button class="btn btn-default" role="button" @onclick="() => AddToCart(product)">Add to Cart</button>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string? Category { get; set; }
+
+    private IEnumerable<Product?>? products;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Logger.LogInformation("Loading products for category: {Category}", Category ?? "All Categories");
+        products = await ProductRepository.GetByCategoryAsync(Category);
+    }
+    private async Task AddToCart(Product product)
+    {
+        Logger.LogInformation("Adding to Cart " + product.Name);
+        await CartService.AddToCartAsync(product, 1);
+        await CartEventService.NotifyCartUpdatedAsync();
+    }
+}
